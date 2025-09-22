@@ -13,18 +13,46 @@ public class GUI {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            Translator translator = new JSONTranslator();
+
+            // COUNTRY PANEL
             JPanel countryPanel = new JPanel();
-            JTextField countryField = new JTextField(10);
-            countryField.setText("can");
-            countryField.setEditable(false); // we only support the "can" country code for now
             countryPanel.add(new JLabel("Country:"));
-            countryPanel.add(countryField);
 
+            String[] countries = new String[translator.getCountryCodes().size()];
+            CountryCodeConverter countryCodeConverter = new CountryCodeConverter();
+
+            int i = 0;
+            for(String countryCode : translator.getCountryCodes()) {
+                String country = countryCodeConverter.fromCountryCode(countryCode);
+                countries[i++] = country;
+            }
+
+            JList<String> countryList = new JList<>(countries);
+            // place the JList in a scroll pane so that it is scrollable in the UI
+            JScrollPane countryScrollPane = new JScrollPane(countryList);
+
+            countryPanel.add(countryScrollPane);
+
+            // LANGUAGE PANEL
             JPanel languagePanel = new JPanel();
-            JTextField languageField = new JTextField(10);
             languagePanel.add(new JLabel("Language:"));
-            languagePanel.add(languageField);
 
+            String[] languages = new String[translator.getLanguageCodes().size()];
+            LanguageCodeConverter languageCodeConverter = new LanguageCodeConverter();
+
+            int j = 0;
+            for(String languageCode : translator.getLanguageCodes()) {
+                String lang = languageCodeConverter.fromLanguageCode(languageCode);
+                languages[j++] = lang;
+            }
+
+            JList<String> languageList = new JList<>(languages);
+            // place the JList in a scroll pane so that it is scrollable in the UI
+            JScrollPane languageScrollPane = new JScrollPane(languageList);
+            languagePanel.add(languageScrollPane, 1);
+
+            // BUTTON PANEL
             JPanel buttonPanel = new JPanel();
             JButton submit = new JButton("Submit");
             buttonPanel.add(submit);
@@ -39,14 +67,17 @@ public class GUI {
             submit.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    String language = languageField.getText();
-                    String country = countryField.getText();
+                    String language = languageList.getSelectedValue();
+                    String country = countryList.getSelectedValue();
 
-                    // for now, just using our simple translator, but
-                    // we'll need to use the real JSON version later.
-                    Translator translator = new CanadaTranslator();
+                    Translator translator = new JSONTranslator();
 
-                    String result = translator.translate(country, language);
+                    CountryCodeConverter countryCodeConverter = new CountryCodeConverter();
+                    String convertedCountry = countryCodeConverter.fromCountry(country);
+                    LanguageCodeConverter languageCodeConverter = new LanguageCodeConverter();
+                    String convertedLanguage = languageCodeConverter.fromLanguage(language);
+
+                    String result = translator.translate(convertedCountry, convertedLanguage);
                     if (result == null) {
                         result = "no translation found!";
                     }
